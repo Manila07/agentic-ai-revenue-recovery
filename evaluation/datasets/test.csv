@@ -1,0 +1,4 @@
+payment_id,amount,failure_category,recovered
+test1,1200,INSUFFICIENT_FUNDS,1
+test2,800,CARD_EXPIRED,0
+test3,2500,NETWORK_ERROR,1

@@ -1,0 +1,15 @@
+Analyze the payment failure and determine the failure category.
+Failure reason: {failure_reason}
+
+Categories:
+- INSUFFICIENT_FUNDS
+- CARD_EXPIRED
+- CARD_DECLINED
+- NETWORK_ERROR
+- BANK_UNAVAILABLE
+- LIMIT_EXCEEDED
+- INVALID_CVV
+- DUPLICATE
+- UNKNOWN
+
+Return the category as JSON.

@@ -1,0 +1,6 @@
+Analyze the payment recovery data and summarize:
+- Total failed payments
+- Recovered payments
+- Revenue recovered
+- Recovery rate
+- Improvement suggestions

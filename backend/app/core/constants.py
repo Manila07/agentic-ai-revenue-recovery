@@ -1,0 +1,45 @@
+from enum import Enum
+
+class PaymentStatus(str, Enum):
+    PENDING = "PENDING"
+    SUCCESS = "SUCCESS"
+    FAILED = "FAILED"
+    REFUNDED = "REFUNDED"
+
+class RecoveryAction(str, Enum):
+    RETRY = "RETRY"
+    NOTIFY = "NOTIFY"
+    WAIT = "WAIT"
+    ESCALATE = "ESCALATE"
+    STOP = "STOP"
+
+class AgentDecision(str, Enum):
+    RETRY = "RETRY"
+    NOTIFY_CUSTOMER = "NOTIFY_CUSTOMER"
+    WAIT_AND_RETRY = "WAIT_AND_RETRY"
+    ESCALATE = "ESCALATE"
+    STOP = "STOP"
+
+class FailureCategory(str, Enum):
+    INSUFFICIENT_FUNDS = "INSUFFICIENT_FUNDS"
+    CARD_EXPIRED = "CARD_EXPIRED"
+    CARD_DECLINED = "CARD_DECLINED"
+    NETWORK_ERROR = "NETWORK_ERROR"
+    BANK_UNAVAILABLE = "BANK_UNAVAILABLE"
+    LIMIT_EXCEEDED = "LIMIT_EXCEEDED"
+    INVALID_CVV = "INVALID_CVV"
+    DUPLICATE = "DUPLICATE"
+    UNKNOWN = "UNKNOWN"
+
+RETRYABLE_FAILURES = {
+    FailureCategory.INSUFFICIENT_FUNDS,
+    FailureCategory.NETWORK_ERROR,
+    FailureCategory.BANK_UNAVAILABLE,
+    FailureCategory.LIMIT_EXCEEDED,
+}
+
+NON_RETRYABLE_FAILURES = {
+    FailureCategory.CARD_EXPIRED,
+    FailureCategory.INVALID_CVV,
+    FailureCategory.DUPLICATE,
+}

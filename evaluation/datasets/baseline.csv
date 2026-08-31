@@ -1,0 +1,6 @@
+payment_id,amount,failure_category,recovered
+pay1,1000,INSUFFICIENT_FUNDS,1
+pay2,500,CARD_EXPIRED,0
+pay3,2000,NETWORK_ERROR,1
+pay4,3000,BANK_UNAVAILABLE,1
+pay5,1500,CARD_DECLINED,0

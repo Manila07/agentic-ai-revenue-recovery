@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+.env
+venv/
+node_modules/
+dist/
+*.db
+*.sqlite3
+ml/models/*.pkl
+ml/models/model_metadata.json
+.pytest_cache/
+.coverage
+htmlcov/

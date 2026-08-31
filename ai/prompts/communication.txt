@@ -1,0 +1,7 @@
+Generate a customer notification message for a failed payment.
+
+Amount: {amount}
+Currency: {currency}
+Failure reason: {failure_reason}
+
+Make it polite, professional, and include clear next steps.
