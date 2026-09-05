@@ -5,13 +5,13 @@ from ai.guardrails.action_validator import ActionValidator
 def test_recovery_agent_high_probability():
     agent = RecoveryAgent()
     payment = type("Payment", (), {"failure_category": "INSUFFICIENT_FUNDS"})()
-    result = agent.analyze(payment, 0.85)
+    result = agent.analyze({"failure_category": "INSUFFICIENT_FUNDS"})
     assert result["decision"] == "RETRY"
 
 def test_recovery_agent_low_probability():
     agent = RecoveryAgent()
     payment = type("Payment", (), {"failure_category": "INSUFFICIENT_FUNDS"})()
-    result = agent.analyze(payment, 0.2)
+    result = agent.analyze({"failure_category": "INSUFFICIENT_FUNDS"})
     assert result["decision"] == "STOP"
 
 def test_action_validator_non_retryable():
