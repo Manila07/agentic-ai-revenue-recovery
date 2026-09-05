@@ -1,96 +1,128 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from "react";
 
-const demoData = {
-  total_payments: 1042,
-  failed_payments: 178,
-  recovered_payments: 52,
-  revenue_at_risk: 2450000,
-  recovered_revenue: 680000,
-  recovery_rate: 29.2,
-  pending_recovery: 126
-}
+const API = "http://localhost:8000/api";
 
 export default function Dashboard() {
-  const [overview, setOverview] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [isLive, setIsLive] = useState(false)
+  const [payments, setPayments] = useState([]);
+  const [stats, setStats] = useState(null);
+  const [analytics, setAnalytics] = useState(null);
+  const [events, setEvents] = useState([]);
 
   useEffect(() => {
-    // Try to fetch from backend, fall back to demo data
-    fetch('http://127.0.0.1:8000/api/v1/analytics/overview')
-      .then(res => res.json())
-      .then(data => {
-        setOverview(data)
-        setIsLive(true)
-      })
-      .catch(() => {
-        console.warn('Backend not available, using demo data')
-        setOverview(demoData)
-        setIsLive(false)
-      })
-      .finally(() => setLoading(false))
-  }, [])
+    loadData();
+  }, []);
 
-  if (loading) return <div className="text-center py-20">Loading...</div>
-  if (!overview) return <div className="text-center py-20">No data</div>
-
-  const kpis = [
-    { label: 'Revenue at Risk', value: `₹${overview.revenue_at_risk.toLocaleString('en-IN')}`, color: 'text-orange-600' },
-    { label: 'Recovered Revenue', value: `₹${overview.recovered_revenue.toLocaleString('en-IN')}`, color: 'text-green-600' },
-    { label: 'Recovery Rate', value: `${overview.recovery_rate.toFixed(1)}%`, color: 'text-blue-600' },
-    { label: 'Failed Payments', value: overview.failed_payments, color: 'text-red-600' },
-  ]
+  function loadData() {
+    fetch(`${API}/payments?limit=10`)
+      .then(r => r.json())
+      .then(d => setPayments(d.payments || []))
+      .catch(() => {});
+    fetch(`${API}/payments/stats`)
+      .then(r => r.json())
+      .then(d => setStats(d))
+      .catch(() => {});
+    fetch(`${API}/analytics/overview`)
+      .then(r => r.json())
+      .then(d => setAnalytics(d))
+      .catch(() => {});
+  }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Dashboard</h1>
-        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${isLive ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
-          {isLive ? '● Live' : '● Demo Data'}
-        </span>
+    <div className="p-6">
+      <h1 className="text-2xl font-bold text-white mb-6">Dashboard</h1>
+
+      {/* Metric Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <Card
+          title="Total Failed Payments"
+          value={stats?.total_payments || 0}
+          color="text-red-400"
+        />
+        <Card
+          title="Total At-Risk Revenue"
+          value={`₹${(stats?.total_amount || 0).toLocaleString()}`}
+          color="text-yellow-400"
+        />
+        <Card
+          title="Revenue Recovered"
+          value={`₹${(analytics?.total_recovered_amount || 0).toLocaleString()}`}
+          color="text-green-400"
+        />
+        <Card
+          title="Recovery Rate"
+          value={`${analytics?.recovery_rate || 0}%`}
+          color="text-blue-400"
+        />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {kpis.map((kpi) => (
-          <div key={kpi.label} className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <p className="text-sm text-gray-500">{kpi.label}</p>
-            <p className={`text-2xl font-bold ${kpi.color}`}>{kpi.value}</p>
+      {/* Live Events */}
+      {events.length > 0 && (
+        <div className="mb-8">
+          <h2 className="text-lg font-semibold text-white mb-4">🔴 Live Events</h2>
+          <div className="bg-gray-800 rounded-lg border border-gray-700 p-4 max-h-48 overflow-auto">
+            {events.map((e, i) => (
+              <div key={i} className="text-sm py-1 border-b border-gray-700 last:border-0">
+                <span className="text-green-400">{e.type}</span>
+                <span className="text-gray-400 ml-2">{e.data?.payment_id}</span>
+                <span className="text-gray-500 ml-2 text-xs">
+                  {new Date().toLocaleTimeString()}
+                </span>
+              </div>
+            ))}
           </div>
-        ))}
+        </div>
+      )}
+
+      {/* Recent Failed Payments */}
+      <h2 className="text-lg font-semibold text-white mb-4">Recent Failed Payments</h2>
+      <div className="bg-gray-800 rounded-lg overflow-hidden">
+        <table className="w-full text-sm">
+          <thead className="bg-gray-900 text-gray-400">
+            <tr>
+              <th className="px-4 py-3 text-left">Payment ID</th>
+              <th className="px-4 py-3 text-left">Amount</th>
+              <th className="px-4 py-3 text-left">Failure Reason</th>
+              <th className="px-4 py-3 text-left">Method</th>
+            </tr>
+          </thead>
+          <tbody>
+            {payments.map(p => (
+              <tr key={p.id} className="border-t border-gray-700 hover:bg-gray-750">
+                <td className="px-4 py-3 text-blue-400 font-mono">{p.id}</td>
+                <td className="px-4 py-3 text-white font-semibold">
+                  ₹{p.amount?.toLocaleString()}
+                </td>
+                <td className="px-4 py-3 text-red-400">
+                  {p.failure_reason?.replace(/_/g, " ")}
+                </td>
+                <td className="px-4 py-3 text-gray-300">
+                  {p.payment_method?.replace(/_/g, " ")}
+                </td>
+              </tr>
+            ))}
+            {payments.length === 0 && (
+              <tr>
+                <td colSpan="4" className="px-4 py-8 text-gray-500 text-center">
+                  No failed payments found
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
 
-      <Chart />
+      <p className="text-gray-500 mt-4 text-sm">
+        Go to Payments page to analyze and execute recoveries.
+      </p>
     </div>
-  )
+  );
 }
 
-function Chart() {
-  const bars = [
-    { label: 'Mon', failed: 4000, recovered: 2400 },
-    { label: 'Tue', failed: 3000, recovered: 1398 },
-    { label: 'Wed', failed: 2000, recovered: 3800 },
-    { label: 'Thu', failed: 2780, recovered: 3908 },
-    { label: 'Fri', failed: 1890, recovered: 4800 },
-    { label: 'Sat', failed: 2390, recovered: 3800 },
-    { label: 'Sun', failed: 3490, recovered: 4300 },
-  ]
-
-  const max = Math.max(...bars.map(b => Math.max(b.failed, b.recovered)))
-
+function Card({ title, value, color }) {
   return (
-    <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-      <h3 className="text-lg font-semibold mb-4">Revenue Trend (7D)</h3>
-      <div className="flex items-end justify-between h-48">
-        {bars.map((bar) => (
-          <div key={bar.label} className="flex flex-col items-center flex-1">
-            <div className="flex items-end gap-1" style={{ height: '100%' }}>
-              <div className="bg-red-400 w-4 rounded-t" style={{ height: `${(bar.failed / max) * 100}%` }} />
-              <div className="bg-green-400 w-4 rounded-t" style={{ height: `${(bar.recovered / max) * 100}%` }} />
-            </div>
-            <span className="text-xs mt-2">{bar.label}</span>
-          </div>
-        ))}
-      </div>
+    <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+      <p className="text-gray-400 text-sm">{title}</p>
+      <p className={`text-2xl font-bold mt-2 ${color}`}>{value}</p>
     </div>
-  )
+  );
 }

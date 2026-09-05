@@ -1,21 +1,65 @@
-MIT License
 
-Copyright (c) 2026 Razorpay AI Buildathon Team
+---
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+## Fix 2: Human-in-the-Loop Approval
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+### Backend — Replace `backend/app/api/routes/recovery.py`
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+```python
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+from app.database import get_db
+
+router = APIRouter()
+
+
+@router.post("/{payment_id}/analyze")
+def analyze_payment(payment_id: str, db: Session = Depends(get_db)):
+    from app.services.recovery_engine import analyze_payment as analyze
+    return analyze(db, payment_id)
+
+
+@router.post("/{payment_id}/execute")
+def execute_recovery(
+    payment_id: str,
+    human_approved: bool = False,
+    db: Session = Depends(get_db),
+):
+    from app.services.recovery_engine import execute_recovery as execute
+    return execute(db, payment_id, human_approved=human_approved)
+
+
+@router.post("/{payment_id}/approve")
+def approve_recovery(payment_id: str, db: Session = Depends(get_db)):
+    from app.models.recovery import RecoveryAttempt
+    attempt = (
+        db.query(RecoveryAttempt)
+        .filter(
+            RecoveryAttempt.payment_id == payment_id,
+            RecoveryAttempt.status == "pending_approval",
+        )
+        .first()
+    )
+    if not attempt:
+        raise HTTPException(status_code=404, detail="No pending recovery found")
+    attempt.status = "approved"
+    db.commit()
+    return {"message": "Recovery approved", "payment_id": payment_id}
+
+
+@router.post("/{payment_id}/reject")
+def reject_recovery(payment_id: str, db: Session = Depends(get_db)):
+    from app.models.recovery import RecoveryAttempt
+    attempt = (
+        db.query(RecoveryAttempt)
+        .filter(
+            RecoveryAttempt.payment_id == payment_id,
+            RecoveryAttempt.status == "pending_approval",
+        )
+        .first()
+    )
+    if not attempt:
+        raise HTTPException(status_code=404, detail="No pending recovery found")
+    attempt.status = "rejected"
+    db.commit()
+    return {"message": "Recovery rejected", "payment_id": payment_id}

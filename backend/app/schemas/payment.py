@@ -1,25 +1,36 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime
 
-class PaymentOut(BaseModel):
+
+class PaymentBase(BaseModel):
     id: str
+    merchant_id: str
     customer_id: str
     amount: float
     currency: str = "INR"
-    method: str = "card"
     status: str
-    failure_reason: Optional[str] = None
-    failure_category: Optional[str] = None
+    failure_reason: str
+    failure_code: str
+    payment_method: str
+    retry_count: int = 0
+
+
+class PaymentResponse(PaymentBase):
     created_at: Optional[datetime] = None
-    recovered: bool = False
-    recovered_amount: float = 0.0
-    recovery_probability: float = 0.0
+    updated_at: Optional[datetime] = None
+    customer_total_payments: int = 0
+    customer_successful_payments: int = 0
+    customer_failed_payments: int = 0
+    customer_success_rate: float = 0.0
+    customer_previous_retries: int = 0
 
     class Config:
         from_attributes = True
 
-class PaymentSimulate(BaseModel):
-    amount: float = Field(..., gt=0)
-    failure_reason: Optional[str] = Field(None)
-    customer_id: Optional[str] = Field(None)
+
+class PaymentListResponse(BaseModel):
+    payments: list[PaymentResponse]
+    total: int
+    page: int = 1
+    per_page: int = 20

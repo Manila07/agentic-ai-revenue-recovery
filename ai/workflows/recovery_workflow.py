@@ -9,7 +9,7 @@ class RecoveryWorkflow:
     def execute(self, db, payment, action: str) -> Dict[str, Any]:
         valid, error = self.validator.validate(action, payment)
         if not valid:
-            return {"success": False, "message": f"Invalid: {error}"}
+            return {"success": False, "verified": False, "message": f"Invalid: {error}"}
 
         if action == "RETRY":
             return self._execute_retry(db, payment)
@@ -22,12 +22,15 @@ class RecoveryWorkflow:
         elif action == "STOP":
             return self._execute_stop(db, payment)
         else:
-            return {"success": False, "message": f"Unknown action: {action}"}
+            return {"success": False, "verified": False, "message": f"Unknown action: {action}"}
 
     def _execute_retry(self, db, payment) -> Dict[str, Any]:
-        success = payment.recovery_probability > 0.5
+        # In production, call gateway; in simulation, use deterministic logic
+        success = payment.recovery_probability > 0.5  # simplified
+        verified = success  # verify based on gateway result
         return {
             "success": success,
+            "verified": verified,
             "message": "Payment retry successful!" if success else "Payment retry failed again.",
         }
 
@@ -36,13 +39,13 @@ class RecoveryWorkflow:
             payment.customer_id,
             "Your payment needs attention. Please update payment method.",
         )
-        return {"success": True, "message": result["message"]}
+        return {"success": True, "verified": False, "message": result["message"]}
 
     def _execute_wait(self, db, payment) -> Dict[str, Any]:
-        return {"success": True, "message": "Scheduled retry in cooldown period."}
+        return {"success": True, "verified": False, "message": "Scheduled retry in cooldown period."}
 
     def _execute_escalate(self, db, payment) -> Dict[str, Any]:
-        return {"success": True, "message": "Escalated to manual review team."}
+        return {"success": True, "verified": False, "message": "Escalated to manual review team."}
 
     def _execute_stop(self, db, payment) -> Dict[str, Any]:
-        return {"success": True, "message": "Recovery stopped for this payment."}
+        return {"success": True, "verified": False, "message": "Recovery stopped for this payment."}

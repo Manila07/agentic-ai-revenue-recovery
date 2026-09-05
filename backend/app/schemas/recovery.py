@@ -1,38 +1,41 @@
-from pydantic import BaseModel, Field
-from typing import Optional, List
+from pydantic import BaseModel
+from typing import Optional
 from datetime import datetime
 
-class RecoveryAnalysisOut(BaseModel):
+
+class RecoveryAnalysis(BaseModel):
     payment_id: str
     recovery_probability: float
-    failure_category: str
+    risk_score: float
     recommended_action: str
-    reasoning: str
     confidence: float
+    explanation: str
+    requires_human_approval: bool
+    factors: dict = {}
 
-class RecoveryExecuteIn(BaseModel):
-    action: str = Field(..., description="Action to execute")
-    approved_by: Optional[str] = Field(None, description="Human approver")
 
-class RecoveryExecuteOut(BaseModel):
-    payment_id: str
-    action: str
-    success: bool
-    message: str
-    attempt_number: int
+class RecoveryExecuteRequest(BaseModel):
+    strategy: str
+    approved: bool = False
 
-class RecoveryApproveIn(BaseModel):
-    approved_by: str
-    note: Optional[str] = None
 
-class RecoveryAttemptOut(BaseModel):
+class RecoveryResponse(BaseModel):
     id: int
     payment_id: str
-    attempt_number: int
-    action: str
-    scheduled_at: Optional[datetime] = None
-    result: Optional[str] = None
+    strategy: str
     status: str
+    recovery_probability: float
+    risk_score: float
+    explanation: str
+    requires_human_approval: bool
+    result: Optional[str] = None
+    recovered_amount: float = 0.0
+    created_at: Optional[datetime] = None
 
     class Config:
         from_attributes = True
+
+
+class RecoveryListResponse(BaseModel):
+    recoveries: list[RecoveryResponse]
+    total: int

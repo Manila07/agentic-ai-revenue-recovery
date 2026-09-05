@@ -1,0 +1,7 @@
+{
+  "max_retries": 3,
+  "auto_approval_limit": 25000,
+  "max_risk_score": 0.85,
+  "cooldown_minutes": 60,
+  "non_retryable_failures": ["CARD_EXPIRED", "INVALID_CVV", "DUPLICATE"]
+}

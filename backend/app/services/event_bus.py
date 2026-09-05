@@ -1,35 +1,36 @@
-# backend/app/services/event_bus.py
-from typing import List, Dict, Any
-from fastapi import WebSocket
+"""In-process event bus for WebSocket broadcasting."""
 import asyncio
 import json
-import logging
+from typing import List
+from fastapi import WebSocket
 
-logger = logging.getLogger(__name__)
 
 class EventBus:
     def __init__(self):
         self.connections: List[WebSocket] = []
+        self._lock = asyncio.Lock()
 
-    async def connect(self, websocket: WebSocket):
-        await websocket.accept()
-        self.connections.append(websocket)
-        logger.info(f"WebSocket connected. Total: {len(self.connections)}")
+    async def connect(self, ws: WebSocket):
+        await ws.accept()
+        async with self._lock:
+            self.connections.append(ws)
 
-    def disconnect(self, websocket: WebSocket):
-        if websocket in self.connections:
-            self.connections.remove(websocket)
-            logger.info(f"WebSocket disconnected. Total: {len(self.connections)}")
+    async def disconnect(self, ws: WebSocket):
+        async with self._lock:
+            if ws in self.connections:
+                self.connections.remove(ws)
 
-    async def broadcast(self, event: Dict[str, Any]):
-        """Send event to all connected clients."""
-        message = json.dumps(event, default=str)
-        for websocket in self.connections[:]:  # iterate over copy
-            try:
-                await websocket.send_text(message)
-            except Exception:
-                # Remove broken connection
-                await self.disconnect(websocket)
+    async def broadcast(self, event_type: str, data: dict):
+        message = json.dumps({"type": event_type, "data": data})
+        dead = []
+        async with self._lock:
+            for ws in self.connections:
+                try:
+                    await ws.send_text(message)
+                except Exception:
+                    dead.append(ws)
+            for ws in dead:
+                self.connections.remove(ws)
 
-# Singleton instance
+
 event_bus = EventBus()

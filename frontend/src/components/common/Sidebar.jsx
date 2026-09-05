@@ -1,41 +1,54 @@
-import React from 'react'
-import { Link, NavLink } from 'react-router-dom'
+import React from "react";
+import { NavLink } from "react-router-dom";
+import { 
+  LayoutDashboard, CreditCard, RotateCcw, Bot, BarChart3, Play, Settings 
+} from "lucide-react";
 
-const navItems = [
-  { path: '/', label: 'Dashboard', icon: '📊' },
-  { path: '/payments', label: 'Payments', icon: '💳' },
-  { path: '/recovery', label: 'Recovery', icon: '🔄' },
-  { path: '/agent', label: 'Agent Activity', icon: '🤖' },
-  { path: '/analytics', label: 'Analytics', icon: '📈' },
-  { path: '/settings', label: 'Settings', icon: '⚙️' },
-  { path: '/demo', label: 'Live Demo', icon: '⚡' }
-]
+const links = [
+  { to: "/", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/payments", label: "Payments", icon: CreditCard },
+  { to: "/recovery", label: "Recovery", icon: RotateCcw },
+  { to: "/agent", label: "Agent", icon: Bot },
+  { to: "/analytics", label: "Analytics", icon: BarChart3 },
+  { to: "/live-demo", label: "Live Demo", icon: Play },
+  { to: "/settings", label: "Settings", icon: Settings },
+];
 
 export default function Sidebar() {
   return (
-    <aside className="w-64 bg-white border-r border-gray-200 flex flex-col">
-      <div className="p-4 border-b border-gray-200">
-        <h2 className="text-xl font-bold text-primary">RecoverAI</h2>
+    <aside style={{ width: 256, backgroundColor: '#1e293b', borderRight: '1px solid #334155' }}>
+      <div style={{ padding: 24, borderBottom: '1px solid #334155' }}>
+        <h1 style={{ fontSize: 20, fontWeight: 'bold', color: '#818cf8' }}>
+          🤖 Revenue Recovery
+        </h1>
+        <p style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>
+          Agentic AI Platform
+        </p>
       </div>
-      <nav className="flex-1 p-4 space-y-1">
-        {navItems.map((item) => (
+      <nav style={{ padding: 16 }}>
+        {links.map(({ to, label, icon: Icon }) => (
           <NavLink
-            key={item.path}
-            to={item.path}
-            end={item.path === '/'}
-            className={({ isActive }) =>
-              `flex items-center gap-3 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                isActive
-                  ? 'bg-primary text-white'
-                  : 'text-gray-700 hover:bg-gray-100 hover:text-primary'
-              }`
-            }
+            key={to}
+            to={to}
+            end={to === "/"}
+            style={({ isActive }) => ({
+              display: 'flex',
+              alignItems: 'center',
+              gap: 12,
+              padding: '10px 16px',
+              borderRadius: 8,
+              marginBottom: 4,
+              color: isActive ? '#ffffff' : '#94a3b8',
+              backgroundColor: isActive ? '#4f46e5' : 'transparent',
+              textDecoration: 'none',
+              fontSize: 14,
+            })}
           >
-            <span>{item.icon}</span>
-            {item.label}
+            <Icon size={18} />
+            {label}
           </NavLink>
         ))}
       </nav>
     </aside>
-  )
+  );
 }
