@@ -6,3 +6,4 @@ sqlalchemy==2.0.25
 pytest==7.4.4
 pytest-asyncio==0.23.2
 python-dotenv==1.0.0
+httpx
