@@ -22,3 +22,7 @@ def startup():
 @app.get("/")
 def root():
     return {"message": "Agentic AI Revenue Recovery Platform API"}
+# Ensure schema exists whether started via uvicorn or pytest
+from app.database import Base, engine
+Base.metadata.create_all(bind=engine)
+
